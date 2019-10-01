@@ -1,4 +1,9 @@
 const { graphql, buildSchema } = require('graphql');
+const express = require('express');
+const graphqlHTTP = require('express-graphql');
+
+const PORT = process.env.PORT || 5678;
+const server = express();
 
 const schema = buildSchema(`
 type Video {
@@ -45,24 +50,10 @@ const resolvers = {
     }
 };
 
-const query = `
-query firstQuery {
-    videos {
-        id,
-        title,
-        watched,
-        duration
-    }
-}
-`;
+server.use('/graphql', graphqlHTTP({
+    schema: schema,
+    rootValue: resolvers,
+    graphiql: true
+}));
 
-async function main() {
-    try {
-        const result = await graphql(schema, query, resolvers);
-        console.log(result);        
-    } catch (error) {
-        console.log(error);        
-    }
-}
-
-main();
+server.listen(PORT, () => console.log(`Server running at http://localhost:${PORT}`));
