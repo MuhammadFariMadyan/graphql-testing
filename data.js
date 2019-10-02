@@ -34,7 +34,19 @@ function getAllVideos(){
     })
 }
 
+function createVideo({title, duration, watched}) {
+    const newVideo = {
+        id: new Buffer(title, 'utf8').toString('base64'),
+        title,
+        duration,
+        watched
+    }
+    VIDEOS.push(newVideo);
+    return newVideo;
+}
+
 module.exports = {
     getAllVideos,
-    getVideoById
+    getVideoById,
+    createVideo
 }
