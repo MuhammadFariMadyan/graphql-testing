@@ -9,32 +9,10 @@ const {
  } = require('graphql');
 const express = require('express');
 const graphqlHTTP = require('express-graphql');
+const { getAllVideos, getVideoById } = require('./data.js');
 
 const PORT = process.env.PORT || 5678;
 const server = express();
-
-const VIDEOS = [
-    {
-        id: '1',
-        title: 'Learning GraphQL',
-        duration: 180,
-        watched: true
-    },
-
-    {
-        id: '2',
-        title: 'Learning JS',
-        duration: 100,
-        watched: true
-    },
-
-    {
-        id: '3',
-        title: 'Learning PHP',
-        duration: 120,
-        watched: false
-    }
-];
 
 const videoType = new GraphQLObjectType({
     name: 'Video',
@@ -65,24 +43,21 @@ const queryType = new GraphQLObjectType({
     fields: {
         video: {
             type: videoType,
-            resolve: () => new Promise((resolve) => {
-                resolve({
-                    id: '1',
-                    title: `What's new in GraphQL`,
-                    duration: 180,
-                    watched: false
-                })
-            })
+            args: {
+                id: {
+                    type: GraphQLID,
+                    description: 'ID of the video.'
+                }
+            },
+            resolve: (_, args) => {
+                return getVideoById(args.id)
+            }
         },
         videos: {
             type: new GraphQLList(videoType),
-            resolve: () => {
-                return new Promise((resolve) => {
-                    resolve(VIDEOS);
-                })
+            resolve: getAllVideos
             }
-        }
-    }
+        }    
 });
 
 const schema = new GraphQLSchema({
