@@ -1,4 +1,4 @@
-const VIDEOS = [
+let VIDEOS = [
     {
         id: '1',
         title: 'Learning GraphQL',
@@ -45,8 +45,16 @@ function createVideo({title, duration, watched}) {
     return newVideo;
 }
 
+function deleteVideo(id) {
+    const deletedVideo = VIDEOS.find(video => video.id === id);
+    const newVideos = VIDEOS.filter(video => video.id !== id);
+    VIDEOS = newVideos;
+    return deletedVideo;
+}
+
 module.exports = {
     getAllVideos,
     getVideoById,
-    createVideo
+    createVideo,
+    deleteVideo
 }

@@ -10,7 +10,7 @@ const {
  } = require('graphql');
 const express = require('express');
 const graphqlHTTP = require('express-graphql');
-const { getAllVideos, getVideoById, createVideo } = require('./data.js');
+const { getAllVideos, getVideoById, createVideo, deleteVideo } = require('./data.js');
 
 const PORT = process.env.PORT || 5678;
 const server = express();
@@ -80,6 +80,18 @@ const mutationType = new GraphQLObjectType({
             },
             resolve: (_, args) => {
                 return createVideo(args);
+            }
+        },
+        deleteVideo: {
+            type: videoType,
+            description: 'Delete a video with an ID',
+            args: {
+                id: {
+                    type: new GraphQLNonNull(GraphQLID)
+                }
+            },
+            resolve: (_, args) => {
+                return deleteVideo(args.id);
             }
         }
     }
