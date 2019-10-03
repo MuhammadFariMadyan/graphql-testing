@@ -10,10 +10,17 @@ const {
  } = require('graphql');
 const express = require('express');
 const graphqlHTTP = require('express-graphql');
-const { getAllVideos, getVideoById, createVideo, deleteVideo } = require('./data.js');
+const massive = require('massive');
 
 const PORT = process.env.PORT || 5678;
+const DB_URL = 'postgres://postgres:rahasia@localhost:5432/kode-video';
 const server = express();
+
+massive({
+    connectionString: DB_URL
+}).then(db => {
+    server.set('db', db);
+})
 
 const videoType = new GraphQLObjectType({
     name: 'Video',
@@ -51,12 +58,12 @@ const queryType = new GraphQLObjectType({
                 }
             },
             resolve: (_, args) => {
-                return getVideoById(args.id)
+                return server.get('db').videos.findOne({ id: args.id});
             }
         },
         videos: {
             type: new GraphQLList(videoType),
-            resolve: getAllVideos
+            resolve: () => server.get('db').videos.find({})
             }
         }    
 });
@@ -79,7 +86,7 @@ const mutationType = new GraphQLObjectType({
                 },
             },
             resolve: (_, args) => {
-                return createVideo(args);
+                return server.get('db').videos.insert(args);
             }
         },
         deleteVideo: {
@@ -91,7 +98,7 @@ const mutationType = new GraphQLObjectType({
                 }
             },
             resolve: (_, args) => {
-                return deleteVideo(args.id);
+                return server.get('db').videos.destroy(args.id);
             }
         }
     }
