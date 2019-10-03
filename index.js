@@ -22,6 +22,19 @@ massive({
     server.set('db', db);
 })
 
+const commmentType = new GraphQLObjectType({
+    name: 'CommentType',
+    description: 'Comment on a video',
+    fields: {
+        id: {
+            type: GraphQLID
+        },
+        text: {
+            type: GraphQLString
+        }
+    }
+});
+
 const videoType = new GraphQLObjectType({
     name: 'Video',
     description: 'A video for KODE platform',
@@ -41,6 +54,10 @@ const videoType = new GraphQLObjectType({
         watched: {
             type: GraphQLBoolean,
             description: 'Whether or not the video has been watched.'
+        },
+        comments: {
+            type: new GraphQLList(commmentType),
+            description: 'Comments for certain video'
         }
     }
 });
@@ -57,13 +74,21 @@ const queryType = new GraphQLObjectType({
                     description: 'ID of the video.'
                 }
             },
-            resolve: (_, args) => {
-                return server.get('db').videos.findOne({ id: args.id});
+            resolve: async (_, args) => {
+                const video = await server.get('db').videos.findOne({ id: args.id});
+                video.comments = await server.get('db').comments.find({ video_id: video.id});
+                return video;
             }
         },
         videos: {
             type: new GraphQLList(videoType),
-            resolve: () => server.get('db').videos.find({})
+            resolve: async () => {
+                    const videos = await server.get('db').videos.find({});
+                    for(let index=0; index<videos.length; index++){
+                        videos[index].comments = await server.get('db').comments.find({video_id: videos[index].id});
+                    }
+                    return videos;
+                }
             }
         }    
 });
@@ -100,6 +125,19 @@ const mutationType = new GraphQLObjectType({
             resolve: (_, args) => {
                 return server.get('db').videos.destroy(args.id);
             }
+        },
+        createComment: {
+            type: commmentType,
+            description: 'Create a new comment',
+            args: {
+                video_id: {
+                    type: new GraphQLNonNull(GraphQLID)
+                },
+                text: {
+                    type: GraphQLString
+                }
+            },
+            resolve: (_, args) => server.get('db').comments.insert(args)
         }
     }
 });
